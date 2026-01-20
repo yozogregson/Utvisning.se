@@ -47,6 +47,11 @@ const formSchema = z.object({
 export function AnalysisForm() {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -141,8 +146,12 @@ export function AnalysisForm() {
                     mode="single"
                     selected={field.value}
                     onSelect={field.onChange}
-                    disabled={(date) =>
-                      date < new Date(new Date().setDate(new Date().getDate() - 1))
+                    disabled={
+                      isClient
+                        ? (date) =>
+                            date <
+                            new Date(new Date().setDate(new Date().getDate() - 1))
+                        : () => true
                     }
                     initialFocus
                   />

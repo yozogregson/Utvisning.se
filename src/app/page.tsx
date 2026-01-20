@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, XCircle } from 'lucide-react';
+import { AnalysisForm } from '@/components/analysis-form';
 
 const HeroSection = () => (
   <section className="w-full py-20 md:py-32 lg:py-40 bg-secondary">
@@ -18,7 +19,7 @@ const HeroSection = () => (
         </div>
       </div>
       <Button asChild className="mt-10 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-        <a href="#plan">Se vår 3-stegsplan</a>
+        <a href="#analys">Starta din överklagan</a>
       </Button>
     </div>
   </section>
@@ -87,49 +88,62 @@ const PlanSection = () => (
         <Card className="text-center">
           <CardHeader>
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">1</div>
-            <CardTitle className="font-headline mt-4">Boka ett samtal</CardTitle>
+            <CardTitle className="font-headline mt-4">Beskriv din situation</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Börja med ett kostnadsfritt och konfidentiellt samtal där du förklarar din situation. Vi lyssnar och ger en första bedömning.</p>
+            <p className="text-muted-foreground">Fyll i dina uppgifter så att vi vet vem du är och när ditt sista datum för överklagan löper ut.</p>
           </CardContent>
         </Card>
         <Card className="text-center">
           <CardHeader>
              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">2</div>
-            <CardTitle className="font-headline mt-4">Vi granskar ditt fall</CardTitle>
+            <CardTitle className="font-headline mt-4">Ladda upp dina underlag</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Våra experter analyserar ditt utvisningsbeslut och alla relevanta dokument för att hitta de starkaste argumenten för din överklagan.</p>
+            <p className="text-muted-foreground">Skicka in ditt beslut från Migrationsverket via vårt säkra formulär. Detta är grunden för vår analys.</p>
           </CardContent>
         </Card>
         <Card className="text-center">
           <CardHeader>
              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground text-xl font-bold">3</div>
-            <CardTitle className="font-headline mt-4">Vi formulerar överklagan</CardTitle>
+            <CardTitle className="font-headline mt-4">Vi tar över bollen</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Vi skriver en professionell och juridiskt välgrundad överklagan som maximerar dina chanser att få stanna i Sverige.</p>
+            <p className="text-muted-foreground">Våra experter granskar dina dokument och kontaktar dig med en konkret plan för hur vi vinner ditt ärende.</p>
           </CardContent>
         </Card>
       </div>
       <div className="text-center mt-12">
         <Button asChild className="bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-          <a href="#cta">Boka ditt kostnadsfria samtal</a>
+          <a href="#analys">Gå vidare till analys</a>
         </Button>
       </div>
     </div>
   </section>
 );
 
-const VSL2Section = () => (
-    <section className="w-full py-20 md:py-24">
-        <div className="container mx-auto px-4 md:px-6 text-center">
-            <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Se exakt hur vi bygger ditt ärende</h2>
-            <p className="mx-auto mt-4 max-w-2xl text-muted-foreground md:text-xl">
-                I den här videon går vi igenom vår process i detalj, från första analys till färdig överklagan.
-            </p>
-             <div className="mt-8 aspect-video bg-card max-w-2xl mx-auto rounded-lg flex items-center justify-center border">
-                <p className="text-muted-foreground">(Video 2: Detaljerad process)</p>
+const AnalysisSection = () => (
+    <section id="analys" className="w-full py-20 md:py-24">
+        <div className="container mx-auto px-4 md:px-6">
+            <div className="mb-12 text-center">
+                <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Så här bygger vi en vinnande överklagan åt dig</h2>
+                <p className="mx-auto mt-4 max-w-3xl text-muted-foreground md:text-xl">
+                    I videon förklarar vi exakt hur vi använder dina dokument för att hitta de juridiska argumenten som krävs för att du ska få stanna.
+                </p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
+                <div className="space-y-4">
+                    <div className="aspect-video bg-card rounded-lg flex items-center justify-center border">
+                        <p className="text-muted-foreground">(Video 2: Detaljerad process)</p>
+                    </div>
+                     <p className="text-sm text-muted-foreground">Titta på videon för att se hur vår process hjälper dig att bygga ett starkt ärende, steg för steg.</p>
+                </div>
+                <Card className="p-6 md:p-8 shadow-lg">
+                    <CardHeader className="p-0 mb-6">
+                        <CardTitle className="font-headline">Starta din kostnadsfria analys</CardTitle>
+                    </CardHeader>
+                    <AnalysisForm />
+                </Card>
             </div>
         </div>
     </section>
@@ -176,12 +190,11 @@ const CTASection = () => (
         Agera nu – din framtid väntar inte.
       </h2>
       <p className="mt-4 max-w-xl text-muted-foreground md:text-lg">
-        Tiden är kritisk när man överklagar ett utvisningsbeslut. Varje dag räknas. Ta det första, viktigaste steget idag genom att boka ett kostnadsfritt samtal med oss.
+        Tiden är kritisk när man överklagar ett utvisningsbeslut. Varje dag räknas. Ta det första, viktigaste steget idag genom att skicka in dina dokument för en kostnadsfri analys.
       </p>
       <Button asChild className="mt-8 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
-        <a href="mailto:kontakt@utvisning.se">Boka kostnadsfritt samtal nu</a>
+        <a href="#analys">Skicka in för analys</a>
       </Button>
-        <p className="mt-4 text-sm text-muted-foreground">eller maila oss direkt på <a href="mailto:kontakt@utvisning.se" className="underline font-semibold text-primary">kontakt@utvisning.se</a></p>
     </div>
   </section>
 );
@@ -192,7 +205,7 @@ export default function Home() {
       <HeroSection />
       <ProblemAndGuideSection />
       <PlanSection />
-      <VSL2Section />
+      <AnalysisSection />
       <StakesSection />
       <CTASection />
     </div>

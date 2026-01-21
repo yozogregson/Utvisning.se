@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CheckCircle, XCircle } from 'lucide-react';
 import { AnalysisForm } from '@/components/analysis-form';
 
@@ -10,7 +10,7 @@ const HeroSection = () => (
         Hotad av utvisning?
       </h1>
       <p className="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
-        Du är inte ensam, och det finns hopp. Ett utvisningsbeslut känns ofta överväldigande och orättvist. Vi guidar dig genom processen för att överklaga Migrationsverkets beslut.
+        Du är inte ensam, och det finns hopp. Vi guidar dig genom processen för att överklaga Migrationsverkets beslut.
       </p>
       <div className="mt-8">
         <p className="font-semibold mb-4">Se vår video för att förstå hur vi kan hjälpa dig:</p>
@@ -141,6 +141,9 @@ const AnalysisSection = () => (
                 <Card className="p-6 md:p-8 shadow-lg">
                     <CardHeader className="p-0 mb-6">
                         <CardTitle className="font-headline">Starta din kostnadsfria analys</CardTitle>
+                        <CardDescription className="pt-2">
+                            Tiden är kritisk. Genom att agera idag säkrar du att ditt ärende hanteras av experter innan tidsfristen löper ut.
+                        </CardDescription>
                     </CardHeader>
                     <AnalysisForm />
                 </Card>

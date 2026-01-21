@@ -10,7 +10,7 @@ const HeroSection = () => (
         Hotad av utvisning?
       </h1>
       <p className="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
-        Du är inte ensam, och det finns hopp. Ett utvisningsbeslut känns ofta överväldigande och orättvist. Vi hjälper dig att navigera i processen och kämpa för din rätt att stanna.
+        Du är inte ensam, och det finns hopp. Ett utvisningsbeslut känns ofta överväldigande och orättvist. Vi guidar dig genom processen för att överklaga Migrationsverkets beslut.
       </p>
       <div className="mt-8">
         <p className="font-semibold mb-4">Se vår video för att förstå hur vi kan hjälpa dig:</p>

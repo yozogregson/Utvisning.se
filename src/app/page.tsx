@@ -109,7 +109,7 @@ const PlanSection = () => (
             <CardTitle className="font-headline mt-4">Vi tar över bollen</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground">Våra experter granskar dina dokument och kontaktar dig med en konkret plan för hur vi vinner ditt ärende.</p>
+            <p className="text-muted-foreground">Våra experter analyserar ditt ärende och skapar en handlingsplan för att maximera dina chanser att få stanna.</p>
           </CardContent>
         </Card>
       </div>

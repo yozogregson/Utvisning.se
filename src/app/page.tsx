@@ -126,9 +126,9 @@ const AnalysisSection = () => (
     <section id="analys" className="w-full py-20 md:py-24">
         <div className="container mx-auto px-4 md:px-6">
             <div className="mb-12 text-center">
-                <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Så här bygger vi en vinnande överklagan åt dig</h2>
+                <h2 className="font-headline text-3xl font-bold tracking-tighter sm:text-4xl">Se hur våra jurister analyserar ditt ärende</h2>
                 <p className="mx-auto mt-4 max-w-3xl text-muted-foreground md:text-xl">
-                    I videon förklarar vi exakt hur vi använder dina dokument för att hitta de juridiska argumenten som krävs för att du ska få stanna.
+                    I videon visar vi hur vi granskar ditt beslut, hittar de viktiga detaljerna och bygger upp argumenten för din överklagan.
                 </p>
             </div>
             <div className="grid md:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">

@@ -111,7 +111,7 @@ service cloud.firestore {
     match /contact_form_submissions/{contactFormSubmissionId} {
       allow get: if false;
       allow list: if false;
-      allow create: if true;
+      allow create: if isSignedIn() && request.resource.data.submitterUid == request.auth.uid;
       allow update: if false;
       allow delete: if false;
     }
@@ -131,6 +131,17 @@ service cloud.firestore {
       allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
       allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
       allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Collection for the Trigger Email extension.
+     * @path /mail/{mailId}
+     * @allow (create) Logged-in users can create new email documents.
+     * @deny (read, list, update, delete) No other operations are allowed.
+     */
+    match /mail/{mailId} {
+        allow read, list, update, delete: if false;
+        allow create: if isSignedIn();
     }
   }
 }

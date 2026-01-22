@@ -101,6 +101,10 @@
           "type": "string",
           "description": "Date and time when the form was submitted.",
           "format": "date-time"
+        },
+        "submitterUid": {
+          "type": "string",
+          "description": "The UID of the (anonymous) user who submitted the form."
         }
       },
       "required": [
@@ -109,7 +113,8 @@
         "email",
         "appealDeadline",
         "fileUrl",
-        "submissionDate"
+        "submissionDate",
+        "submitterUid"
       ]
     },
     "Image": {

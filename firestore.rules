@@ -1,0 +1,136 @@
+/**
+ * @file firestore.rules
+ * @description Security rules for the WebWave Firestore database.
+ *
+ * ## Core Philosophy
+ * This ruleset enforces a security model with a clear separation between public content and private data.
+ * Publicly readable content, such as blog posts, images, and tags, is accessible to all users, including those
+ * not signed in. Write access to this content is restricted to the original author, identified by a UID
+ * stored on the document itself. Private data, such as contact form submissions, is stored in a write-only
+ * "dropbox" collection, preventing any read access until a proper administrative role is implemented.
+ *
+ * ## Data Structure
+ * The data is organized into flat, top-level collections for simplicity and query performance.
+ * - `/blog_posts/{postId}`: Public content.
+ * - `/images/{imageId}`: Public content.
+ * - `/tags/{tagId}`: Public, read-only metadata.
+ * - `/contact_form_submissions/{submissionId}`: Private, write-only data.
+ * This structural segregation is a key design choice that prevents accidental data leakage and simplifies rules.
+ *
+ * ## Key Security Decisions
+ * - **Public Read, Owner Write**: Collections like `/blog_posts` are publicly readable (`get`, `list`), but `create`,
+ *   `update`, and `delete` operations are restricted to authenticated owners.
+ * - **Secure "Dropbox" for Submissions**: The `/contact_form_submissions` collection allows anyone to `create` a document
+ *   (submit the form) but explicitly forbids all read, update, and delete operations. This protects sensitive user
+ *   data while awaiting an admin-only access implementation via Cloud Functions or a future rules update.
+ * - **Read-Only Metadata**: The `/tags` collection is treated as public but immutable from the client. Tags should be
+ *   managed by a trusted backend process or a future admin interface.
+ * - **Default Deny**: Any operation not explicitly granted is denied. Write operations that cannot be secured due
+ *   to missing schema information (e.g., an `ownerId` field on images) are explicitly disabled.
+ *
+ * ## Denormalization for Authorization
+ * To ensure fast and secure authorization, rules rely on an ownership field (e.g., `author`) being present directly
+ * on the documents being secured. For example, a rule on `/blog_posts/{postId}` checks `resource.data.author`
+ * to verify ownership, which avoids slow and costly `get()` calls to other documents. The client application is
+ * responsible for denormalizing this ownership information at the time of creation.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ------------------------------------------------------------------------
+    // Helper Functions
+    // ------------------------------------------------------------------------
+
+    /**
+     * Checks if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the authenticated user's UID matches the provided userId.
+     */
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    /**
+     * For update/delete, checks that the document exists and the user is the owner.
+     * This prevents changing or deleting non-existent documents.
+     */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    // ------------------------------------------------------------------------
+    // Collection Rules
+    // ------------------------------------------------------------------------
+
+    /**
+     * @description Publicly readable blog posts. Only the original author can create, update, or delete their own posts.
+     * @path /blog_posts/{blogPostId}
+     * @allow (get) Any user, signed in or not, can read a specific blog post.
+     * @allow (create) A signed-in user creates a new post, setting their own UID in the `author` field.
+     * @deny (update) A signed-in user tries to modify a post where `resource.data.author` is not their UID.
+     * @principle Enforces Public Read with Owner-Only Writes. Validates ownership on all write operations.
+     */
+    match /blog_posts/{blogPostId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.author == request.auth.uid;
+      allow update: if isExistingOwner(resource.data.author) && request.resource.data.author == resource.data.author;
+      allow delete: if isExistingOwner(resource.data.author);
+    }
+
+    /**
+     * @description Public, read-only tags for blog posts.
+     * @path /tags/{tagId}
+     * @allow (get) Any user, signed in or not, can read a tag.
+     * @deny (create) Any user attempts to create a new tag. This should be handled by an admin backend.
+     * @deny (delete) Any user attempts to delete an existing tag.
+     * @principle Secures data as Public Read-Only to be managed by a trusted process, not clients.
+     */
+    match /tags/{tagId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description A write-only "dropbox" for contact form submissions. Data can be created by anyone but cannot be read.
+     * @path /contact_form_submissions/{contactFormSubmissionId}
+     * @allow (create) An anonymous visitor successfully submits the contact form.
+     * @deny (get) Any user attempts to read a submission, even their own.
+     * @deny (list) Any user attempts to list all submissions.
+     * @principle Protects sensitive user data by making it write-only from the client-side. Access should be granted via Cloud Functions or a secure admin panel.
+     */
+    match /contact_form_submissions/{contactFormSubmissionId} {
+      allow get: if false;
+      allow list: if false;
+      allow create: if true;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Publicly readable image gallery. Write access is currently disabled.
+     * @path /images/{imageId}
+     * @allow (list) Any user, signed in or not, can list all images in the gallery.
+     * @deny (create) Any user attempts to upload a new image.
+     * @deny (update) Any user attempts to change an image's metadata.
+     * @principle Enforces Public Read access. Write access is blocked pending a required schema update.
+     */
+    match /images/{imageId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Cannot implement owner-only writes. The 'Image' entity is missing an 'ownerId' or 'authorId' field.
+      allow create: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+  }
+}

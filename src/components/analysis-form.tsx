@@ -57,8 +57,6 @@ export function AnalysisForm() {
   const storage = firebaseApp ? getStorage(firebaseApp) : null;
 
   useEffect(() => {
-    // Automatically sign in user anonymously if they are not already signed in.
-    // This is required to get permissions to upload files to Firebase Storage.
     if (auth && !isUserLoading && !user) {
       initiateAnonymousSignIn(auth);
     }
@@ -83,7 +81,6 @@ export function AnalysisForm() {
       return;
     }
     
-    // If auth is still loading or user is not signed in yet, ask them to wait.
     if (isUserLoading || !user) {
       toast({
         title: 'Vänta ett ögonblick...',
@@ -95,7 +92,7 @@ export function AnalysisForm() {
     setIsSubmitting(true);
     try {
       const file = values.decisionFile[0];
-      const storageRef = ref(storage, `submissions/${Date.now()}-${file.name}`);
+      const storageRef = ref(storage, `submissions/${user.uid}/${Date.now()}-${file.name}`);
       const uploadTask = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadTask.ref);
 
@@ -106,29 +103,11 @@ export function AnalysisForm() {
         appealDeadline: values.appealDeadline,
         fileUrl: downloadURL,
         submissionDate: new Date(),
+        submitterUid: user.uid,
       };
 
-      // Save the form submission to the database
       addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
       
-      // Trigger the email by adding a document to the 'mail' collection
-      addDocumentNonBlocking(collection(firestore, 'mail'), {
-        to: ['formular@utvisning.se'],
-        message: {
-          subject: `Nytt ärende från: ${values.name}`,
-          html: `
-            <h1>Nytt ärende har skickats in</h1>
-            <p><strong>Namn:</strong> ${values.name}</p>
-            <p><strong>Telefon:</strong> ${values.phone}</p>
-            <p><strong>Klientens e-post:</strong> ${values.email}</p>
-            <p><strong>Sista dag för överklagan:</strong> ${format(values.appealDeadline, 'PPP', { locale: sv })}</p>
-            <p>En kopia av beslutet har laddats upp säkert.</p>
-            <p><em>Logga in i Firebase-konsolen för att se filen och hantera ärendet.</em></p>
-          `,
-        },
-      });
-
-
       toast({
         title: 'Tack för dina uppgifter!',
         description: 'Vi har tagit emot dina dokument och återkommer snart.',
@@ -137,13 +116,12 @@ export function AnalysisForm() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submission error:', error);
       toast({
         variant: 'destructive',
-        title: 'Något gick fel.',
-        description:
-          'Kunde inte skicka in ditt ärende. Kontrollera alla fält och försök igen.',
+        title: 'Fel vid uppladdning',
+        description: error.message || 'Kunde inte skicka in ditt ärende. Kontrollera alla fält och försök igen.',
       });
     } finally {
       setIsSubmitting(false);

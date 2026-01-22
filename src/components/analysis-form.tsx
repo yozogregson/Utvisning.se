@@ -6,8 +6,8 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
-import React from 'react';
-import { useFirebase, addDocumentNonBlocking } from '@/firebase';
+import React, { useEffect } from 'react';
+import { useFirebase, addDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection } from 'firebase/firestore';
 
@@ -53,8 +53,16 @@ export function AnalysisForm() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const { firebaseApp, firestore } = useFirebase();
+  const { firebaseApp, firestore, auth, user, isUserLoading } = useFirebase();
   const storage = firebaseApp ? getStorage(firebaseApp) : null;
+
+  useEffect(() => {
+    // Automatically sign in user anonymously if they are not already signed in.
+    // This is required to get permissions to upload files to Firebase Storage.
+    if (auth && !isUserLoading && !user) {
+      initiateAnonymousSignIn(auth);
+    }
+  }, [auth, isUserLoading, user]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -66,14 +74,24 @@ export function AnalysisForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore || !storage) {
+    if (!firestore || !storage || !auth) {
       toast({
         variant: 'destructive',
         title: 'Något gick fel.',
-        description: 'Kunde inte ansluta till databasen. Försök igen.',
+        description: 'Kunde inte ansluta till servern. Försök igen.',
       });
       return;
     }
+    
+    // If auth is still loading or user is not signed in yet, ask them to wait.
+    if (isUserLoading || !user) {
+      toast({
+        title: 'Vänta ett ögonblick...',
+        description: 'Anslutning upprättas. Försök skicka igen om några sekunder.',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const file = values.decisionFile[0];
@@ -238,9 +256,9 @@ export function AnalysisForm() {
           type="submit"
           className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
           size="lg"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUserLoading}
         >
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {(isSubmitting || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Skicka in för analys
         </Button>
         <p className="pt-2 text-center text-xs text-muted-foreground">

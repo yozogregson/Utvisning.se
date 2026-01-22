@@ -142,7 +142,7 @@ export function AnalysisForm() {
                   </FormControl>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
-                  {isClient && (
+                  {isClient ? (
                     <Calendar
                       mode="single"
                       selected={field.value}
@@ -152,7 +152,7 @@ export function AnalysisForm() {
                       }
                       initialFocus
                     />
-                  )}
+                  ) : null}
                 </PopoverContent>
               </Popover>
               <FormMessage />

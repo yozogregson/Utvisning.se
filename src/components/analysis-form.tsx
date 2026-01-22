@@ -108,24 +108,6 @@ export function AnalysisForm() {
       
       // Save the main submission data
       addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
-
-      // Trigger the email extension
-      addDocumentNonBlocking(collection(firestore, 'mail'), {
-        to: 'formular@utvisning.se',
-        message: {
-          subject: `Nytt ärende från: ${values.name}`,
-          html: `
-            <p>Ett nytt ärende har skickats in via utvisning.se.</p>
-            <p><strong>Namn:</strong> ${values.name}</p>
-            <p><strong>Telefon:</strong> ${values.phone}</p>
-            <p><strong>E-post:</strong> ${values.email}</p>
-            <p><strong>Sista datum för överklagan:</strong> ${format(values.appealDeadline, 'PPP', { locale: sv })}</p>
-            <p><strong>Länk till beslut:</strong> <a href="${downloadURL}">${file.name}</a></p>
-            <br/>
-            <p>Detta är ett automatiskt meddelande. Du kan se alla ärenden i din Firebase-databas.</p>
-          `,
-        },
-      });
       
       toast({
         title: 'Tack för dina uppgifter!',
@@ -140,7 +122,7 @@ export function AnalysisForm() {
       toast({
         variant: 'destructive',
         title: 'Fel vid uppladdning',
-        description: error.message || 'Kunde inte skicka in ditt ärende. Kontrollera alla fält och försök igen.',
+        description: error.message || 'Kunde inte skicka in ditt ärende. Försök igen.',
       });
     } finally {
       setIsSubmitting(false);

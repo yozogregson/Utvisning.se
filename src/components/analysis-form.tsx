@@ -7,6 +7,9 @@ import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import React from 'react';
+import { useFirebase, addDocumentNonBlocking } from '@/firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection } from 'firebase/firestore';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -26,19 +29,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
-
-// This is a placeholder for our backend submission logic
-async function submitForm(values: z.infer<typeof formSchema>): Promise<void> {
-  // In the next step, we'll implement this to upload the file to Firebase Storage
-  // and save the data to Firestore.
-  console.log('Submitting form with values:', values);
-
-  // Simulate network delay
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // To test the error case, you can uncomment the following line:
-  // throw new Error("Simulated backend error");
-}
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -64,6 +54,9 @@ export function AnalysisForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isMounted, setIsMounted] = React.useState(false);
 
+  const { firebaseApp, firestore } = useFirebase();
+  const storage = firebaseApp ? getStorage(firebaseApp) : null;
+
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -78,9 +71,36 @@ export function AnalysisForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!firestore || !storage) {
+      toast({
+        variant: 'destructive',
+        title: 'Något gick fel.',
+        description: 'Kunde inte ansluta till databasen. Försök igen.',
+      });
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await submitForm(values);
+      const file = values.decisionFile[0];
+      const storageRef = ref(storage, `submissions/${Date.now()}-${file.name}`);
+      // First, upload the file
+      const uploadTask = await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+
+      // Now prepare data for Firestore
+      const submissionData = {
+        name: values.name,
+        phone: values.phone,
+        email: values.email,
+        appealDeadline: values.appealDeadline,
+        fileUrl: downloadURL,
+        submissionDate: new Date(),
+      };
+
+      // Use the non-blocking function. This will not throw but emit an error on failure.
+      addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
+
+      // Optimistically show success and reset form
       toast({
         title: 'Tack för dina uppgifter!',
         description: 'Vi har tagit emot dina dokument och återkommer snart.',
@@ -90,11 +110,13 @@ export function AnalysisForm() {
         fileInputRef.current.value = '';
       }
     } catch (error) {
-      console.error(error);
+      // This catch block is primarily for storage upload errors
+      console.error('File upload error:', error);
       toast({
         variant: 'destructive',
         title: 'Något gick fel.',
-        description: 'Kunde inte skicka in dina uppgifter. Försök igen.',
+        description:
+          'Kunde inte ladda upp din fil. Kontrollera filstorleken och försök igen.',
       });
     } finally {
       setIsSubmitting(false);

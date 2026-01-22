@@ -74,22 +74,28 @@
       "type": "object",
       "description": "Represents a submission from the contact form.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the contact form submission."
-        },
         "name": {
           "type": "string",
           "description": "Name of the person submitting the form."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Phone number of the person submitting the form."
         },
         "email": {
           "type": "string",
           "description": "Email address of the person submitting the form.",
           "format": "email"
         },
-        "message": {
+        "appealDeadline": {
           "type": "string",
-          "description": "The message content from the contact form."
+          "description": "The deadline for the appeal.",
+          "format": "date-time"
+        },
+        "fileUrl": {
+          "type": "string",
+          "description": "URL of the uploaded decision file in Firebase Storage.",
+          "format": "uri"
         },
         "submissionDate": {
           "type": "string",
@@ -98,10 +104,11 @@
         }
       },
       "required": [
-        "id",
         "name",
+        "phone",
         "email",
-        "message",
+        "appealDeadline",
+        "fileUrl",
         "submissionDate"
       ]
     },

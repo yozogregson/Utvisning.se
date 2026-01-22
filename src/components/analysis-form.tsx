@@ -52,14 +52,9 @@ export function AnalysisForm() {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [isMounted, setIsMounted] = React.useState(false);
 
   const { firebaseApp, firestore } = useFirebase();
   const storage = firebaseApp ? getStorage(firebaseApp) : null;
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -83,11 +78,9 @@ export function AnalysisForm() {
     try {
       const file = values.decisionFile[0];
       const storageRef = ref(storage, `submissions/${Date.now()}-${file.name}`);
-      // First, upload the file
       const uploadTask = await uploadBytes(storageRef, file);
       const downloadURL = await getDownloadURL(uploadTask.ref);
 
-      // Now prepare data for Firestore
       const submissionData = {
         name: values.name,
         phone: values.phone,
@@ -97,10 +90,27 @@ export function AnalysisForm() {
         submissionDate: new Date(),
       };
 
-      // Use the non-blocking function. This will not throw but emit an error on failure.
+      // Save the form submission to the database
       addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
+      
+      // Trigger the email by adding a document to the 'mail' collection
+      addDocumentNonBlocking(collection(firestore, 'mail'), {
+        to: ['formular@utvisning.se'],
+        message: {
+          subject: `Nytt ärende från: ${values.name}`,
+          html: `
+            <h1>Nytt ärende har skickats in</h1>
+            <p><strong>Namn:</strong> ${values.name}</p>
+            <p><strong>Telefon:</strong> ${values.phone}</p>
+            <p><strong>Klientens e-post:</strong> ${values.email}</p>
+            <p><strong>Sista dag för överklagan:</strong> ${format(values.appealDeadline, 'PPP', { locale: sv })}</p>
+            <p>En kopia av beslutet har laddats upp säkert.</p>
+            <p><em>Logga in i Firebase-konsolen för att se filen och hantera ärendet.</em></p>
+          `,
+        },
+      });
 
-      // Optimistically show success and reset form
+
       toast({
         title: 'Tack för dina uppgifter!',
         description: 'Vi har tagit emot dina dokument och återkommer snart.',
@@ -110,22 +120,16 @@ export function AnalysisForm() {
         fileInputRef.current.value = '';
       }
     } catch (error) {
-      // This catch block is primarily for storage upload errors
-      console.error('File upload error:', error);
+      console.error('Submission error:', error);
       toast({
         variant: 'destructive',
         title: 'Något gick fel.',
         description:
-          'Kunde inte ladda upp din fil. Kontrollera filstorleken och försök igen.',
+          'Kunde inte skicka in ditt ärende. Kontrollera alla fält och försök igen.',
       });
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  // To prevent hydration errors, we only render the form on the client
-  if (!isMounted) {
-    return null;
   }
 
   return (
@@ -218,7 +222,11 @@ export function AnalysisForm() {
                 <Input
                   type="file"
                   ref={fileInputRef}
-                  onChange={(e) => onChange(e.target.files)}
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      onChange(e.target.files);
+                    }
+                  }}
                   {...rest}
                 />
               </FormControl>

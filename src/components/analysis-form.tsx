@@ -7,9 +7,9 @@ import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import React, { useEffect } from 'react';
-import { useFirebase, addDocumentNonBlocking, initiateAnonymousSignIn } from '@/firebase';
+import { useFirebase, initiateAnonymousSignIn, addDocumentNonBlocking } from '@/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection } from 'firebase/firestore';
+import { collection, addDoc } from 'firebase/firestore';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -106,8 +106,25 @@ export function AnalysisForm() {
         submitterUid: user.uid,
       };
       
+      const mailData = {
+        to: 'formular@utvisning.se',
+        message: {
+            subject: `Nytt ärende från: ${values.name}`,
+            html: `
+                <p><strong>Namn:</strong> ${values.name}</p>
+                <p><strong>Telefon:</strong> ${values.phone}</p>
+                <p><strong>E-post:</strong> ${values.email}</p>
+                <p><strong>Sista överklagningsdag:</strong> ${format(values.appealDeadline, 'PPP', { locale: sv })}</p>
+                <p><strong>Länk till beslut:</strong> <a href="${downloadURL}">Ladda ner fil</a></p>
+            `,
+        },
+      };
+
       // Save the main submission data
       addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
+      
+      // Trigger the email by adding a document to the 'mail' collection
+      addDoc(collection(firestore, "mail"), mailData);
       
       toast({
         title: 'Tack för dina uppgifter!',

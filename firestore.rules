@@ -132,5 +132,17 @@ service cloud.firestore {
       allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
       allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
+    
+    /**
+     * @description This collection is used by the 'Trigger Email' extension to send emails.
+     * @path /mail/{mailId}
+     * @allow (create) Any signed-in (including anonymous) user can create a document to trigger an email.
+     * @deny (read, update, delete) No one can read, update, or delete emails from the client-side.
+     * @principle Allows the application to trigger server-side email sending without exposing sensitive configurations.
+     */
+    match /mail/{mailId} {
+        allow create: if isSignedIn();
+        allow read, update, delete: if false;
+    }
   }
 }

@@ -1,242 +1,38 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { format } from 'date-fns';
-import { sv } from 'date-fns/locale';
-import { CalendarIcon, Loader2 } from 'lucide-react';
 import React from 'react';
 
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { useToast } from '@/hooks/use-toast';
+// 1. VIKTIGT: Gå till tally.so, skapa ett formulär och klistra in ditt unika Form ID här.
+const TALLY_FORM_ID = 'YOUR_TALLY_FORM_ID';
 
-// 1. VIKTIGT: Gå till formspree.io, skapa ett formulär och klistra in ditt unika ID här.
-const FORMSPREE_FORM_ID = 'YOUR_FORM_ID';
-
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'Namn måste vara minst 2 tecken.',
-  }),
-  phone: z.string().min(5, {
-    message: 'Ange ett giltigt telefonnummer.',
-  }),
-  email: z.string().email({
-    message: 'Ange en giltig e-postadress.',
-  }),
-  appealDeadline: z.date({
-    required_error: 'Ett datum för överklagan krävs.',
-  }),
-  decisionFile: z
-    .any()
-    .refine((files) => files?.length === 1, 'En fil måste laddas upp.'),
-});
+// Du kan anpassa formuläret med olika alternativ.
+// Se Tallys dokumentation: https://tally.so/help/embed-a-form
+const TALLY_EMBED_URL = `https://tally.so/embed/${TALLY_FORM_ID}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1`;
 
 export function AnalysisForm() {
-  const { toast } = useToast();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      phone: '',
-      email: '',
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (FORMSPREE_FORM_ID === 'YOUR_FORM_ID') {
-        toast({
-            variant: 'destructive',
-            title: 'Formuläret är inte konfigurerat!',
-            description: 'Byt ut YOUR_FORM_ID i koden för att aktivera formuläret.',
-        });
-        return;
-    }
-
-    setIsSubmitting(true);
-
-    const formData = new FormData();
-    formData.append('name', values.name);
-    formData.append('phone', values.phone);
-    formData.append('email', values.email);
-    formData.append('appealDeadline', format(values.appealDeadline, 'PPP', { locale: sv }));
-    formData.append('decisionFile', values.decisionFile[0]);
-    formData.append('_subject', `Nytt ärende: ${values.name}`);
-
-
-    try {
-      const response = await fetch(`https://formspree.io/f/${FORMSPREE_FORM_ID}`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Tack för dina uppgifter!',
-          description: 'Vi har tagit emot ditt ärende och återkommer snart.',
-        });
-        form.reset();
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      } else {
-        throw new Error('Form submission failed');
-      }
-    } catch (error) {
-      console.error('Submission error:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Fel vid inskickning',
-        description: 'Kunde inte skicka in ditt ärende. Försök igen.',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  if (TALLY_FORM_ID === 'YOUR_TALLY_FORM_ID') {
+    return (
+      <div className="text-center p-4 border-2 border-dashed border-destructive rounded-lg bg-destructive/10">
+        <p className="font-semibold text-destructive">Formulär ej konfigurerat</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Redigera filen <code className="font-mono bg-muted p-1 rounded-sm">src/components/analysis-form.tsx</code> och byt ut <code className="font-mono bg-muted p-1 rounded-sm">'YOUR_TALLY_FORM_ID'</code> med ditt Form ID från Tally.
+        </p>
+      </div>
+    );
   }
 
+  // Tallys 'embed.js'-skript (som laddas i layout.tsx) kommer automatiskt
+  // att hitta denna iframe och ladda formuläret.
   return (
-    <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Namn</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ditt fullständiga namn" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="phone"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Telefon</FormLabel>
-                <FormControl>
-                  <Input placeholder="Ditt telefonnummer" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>E-post</FormLabel>
-                <FormControl>
-                  <Input placeholder="din.epost@adress.se" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="appealDeadline"
-            render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Sista datum för överklagan</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={'outline'}
-                        className={cn(
-                          'w-full justify-start text-left font-normal',
-                          !field.value && 'text-muted-foreground'
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {field.value ? (
-                          format(field.value, 'PPP', { locale: sv })
-                        ) : (
-                          <span>Välj ett datum</span>
-                        )}
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="decisionFile"
-            render={({ field: { onChange, value, ...rest } }) => (
-              <FormItem>
-                <FormLabel>Ladda upp ditt beslut här</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        onChange(e.target.files);
-                      }
-                    }}
-                    {...rest}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-            size="lg"
-            disabled={isSubmitting}
-          >
-            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Skicka in för analys
-          </Button>
-          <p className="pt-2 text-center text-xs text-muted-foreground">
-            Dina dokument granskas under sekretess. Vi kontaktar dig så snart vi
-            har läst igenom ditt ärende.
-          </p>
-        </form>
-      </Form>
-      <p className="text-center text-xs text-muted-foreground mt-4">
-        2. Byt ut <code className="font-mono bg-muted p-1 rounded-sm">'YOUR_FORM_ID'</code> i <code className="font-mono bg-muted p-1 rounded-sm">src/components/analysis-form.tsx</code> med ditt riktiga Formspree ID.
-      </p>
-    </>
+    <iframe
+      data-tally-src={TALLY_EMBED_URL}
+      loading="lazy"
+      width="100%"
+      height="400"
+      frameBorder="0"
+      marginHeight="0"
+      marginWidth="0"
+      title="Ansökan om kostnadsfri analys"
+    ></iframe>
   );
 }

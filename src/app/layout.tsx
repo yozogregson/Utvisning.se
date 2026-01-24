@@ -6,6 +6,7 @@ import Header from '@/components/header';
 import Footer from '@/components/footer';
 import Template from './template';
 import { FirebaseClientProvider } from '@/firebase';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Utvisning.se - Vi hjälper dig överklaga ditt utvisningsbeslut',
@@ -42,6 +43,7 @@ export default function RootLayout({
           </div>
           <Toaster />
         </FirebaseClientProvider>
+        <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
       </body>
     </html>
   );

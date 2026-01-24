@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import React, { useEffect } from 'react';
-import { useFirebase, initiateAnonymousSignIn, addDocumentNonBlocking } from '@/firebase';
+import { useFirebase, initiateAnonymousSignIn } from '@/firebase';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, addDoc } from 'firebase/firestore';
 
@@ -72,30 +72,26 @@ export function AnalysisForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore || !storage || !auth) {
+    if (!firestore || !storage || !user) {
       toast({
         variant: 'destructive',
         title: 'Något gick fel.',
-        description: 'Kunde inte ansluta till servern. Försök igen.',
-      });
-      return;
-    }
-    
-    if (isUserLoading || !user) {
-      toast({
-        title: 'Vänta ett ögonblick...',
-        description: 'Anslutning upprättas. Försök skicka igen om några sekunder.',
+        description: 'Kunde inte ansluta till servern. Försök igen senare.',
       });
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // 1. Upload file
       const file = values.decisionFile[0];
-      const storageRef = ref(storage, `submissions/${user.uid}/${Date.now()}-${file.name}`);
-      const uploadTask = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(uploadTask.ref);
+      const storageRef = ref(storage, `klientfiler/${user.uid}/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      
+      // 2. Get link
+      const downloadURL = await getDownloadURL(storageRef);
 
+      // Keep the form submission data for admin purposes
       const submissionData = {
         name: values.name,
         phone: values.phone,
@@ -105,30 +101,28 @@ export function AnalysisForm() {
         submissionDate: new Date(),
         submitterUid: user.uid,
       };
-      
+
+      // 3. Create mail document data as requested
       const mailData = {
         to: 'formular@utvisning.se',
-        message: {
-            subject: `Nytt ärende från: ${values.name}`,
-            html: `
-                <p><strong>Namn:</strong> ${values.name}</p>
-                <p><strong>Telefon:</strong> ${values.phone}</p>
-                <p><strong>E-post:</strong> ${values.email}</p>
-                <p><strong>Sista överklagningsdag:</strong> ${format(values.appealDeadline, 'PPP', { locale: sv })}</p>
-                <p><strong>Länk till beslut:</strong> <a href="${downloadURL}">Ladda ner fil</a></p>
-            `,
-        },
+        message: { // This is a Map (object) as requested
+          subject: 'Nytt ärende: ' + values.name,
+          html: '<h3>Ny förfrågan från utvisad.se</h3>' +
+                '<p><b>Namn:</b> ' + values.name + '</p>' +
+                '<p><b>Telefon:</b> ' + values.phone + '</p>' +
+                '<p><b>Sista datum för överklagan:</b> ' + format(values.appealDeadline, 'PPP', { locale: sv }) + '</p>' +
+                '<p><b>Bifogad fil:</b> <a href="' + downloadURL + '">Klicka här för att öppna beslutet</a></p>'
+        }
       };
-
-      // Save the main submission data
-      addDocumentNonBlocking(collection(firestore, 'contact_form_submissions'), submissionData);
       
-      // Trigger the email by adding a document to the 'mail' collection
-      addDoc(collection(firestore, "mail"), mailData);
+      // Await both operations to ensure they complete before showing success message
+      await addDoc(collection(firestore, 'contact_form_submissions'), submissionData);
+      await addDoc(collection(firestore, 'mail'), mailData);
       
+      // 4. Show confirmation
       toast({
         title: 'Tack för dina uppgifter!',
-        description: 'Vi har tagit emot dina dokument och återkommer snart.',
+        description: 'Vi har tagit emot ditt ärende och återkommer snart.',
       });
       form.reset();
       if (fileInputRef.current) {
@@ -138,8 +132,8 @@ export function AnalysisForm() {
       console.error('Submission error:', error);
       toast({
         variant: 'destructive',
-        title: 'Fel vid uppladdning',
-        description: error.message || 'Kunde inte skicka in ditt ärende. Försök igen.',
+        title: 'Fel vid inskickning',
+        description: error.message || 'Kunde inte skicka in ditt ärende. Kontrollera din anslutning och försök igen.',
       });
     } finally {
       setIsSubmitting(false);

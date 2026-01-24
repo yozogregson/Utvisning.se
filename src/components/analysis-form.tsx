@@ -6,10 +6,7 @@ import * as z from 'zod';
 import { format } from 'date-fns';
 import { sv } from 'date-fns/locale';
 import { CalendarIcon, Loader2 } from 'lucide-react';
-import React, { useEffect } from 'react';
-import { useFirebase, initiateAnonymousSignIn } from '@/firebase';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc } from 'firebase/firestore';
+import React from 'react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,6 +26,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
+
+// 1. VIKTIGT: Gå till formspree.io, skapa ett formulär och klistra in ditt unika ID här.
+const FORMSPREE_FORM_ID = 'YOUR_FORM_ID';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -53,15 +53,6 @@ export function AnalysisForm() {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const { firebaseApp, firestore, auth, user, isUserLoading } = useFirebase();
-  const storage = firebaseApp ? getStorage(firebaseApp) : null;
-
-  useEffect(() => {
-    if (auth && !isUserLoading && !user) {
-      initiateAnonymousSignIn(auth);
-    }
-  }, [auth, isUserLoading, user]);
-
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -72,72 +63,53 @@ export function AnalysisForm() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!firestore || !storage || !user) {
-      toast({
-        variant: 'destructive',
-        title: 'Något gick fel.',
-        description: 'Kunde inte ansluta till servern. Försök igen senare.',
-      });
-      return;
+    if (FORMSPREE_FORM_ID === 'YOUR_FORM_ID') {
+        toast({
+            variant: 'destructive',
+            title: 'Formuläret är inte konfigurerat!',
+            description: 'Byt ut YOUR_FORM_ID i koden för att aktivera formuläret.',
+        });
+        return;
     }
 
     setIsSubmitting(true);
+
+    const formData = new FormData();
+    formData.append('name', values.name);
+    formData.append('phone', values.phone);
+    formData.append('email', values.email);
+    formData.append('appealDeadline', format(values.appealDeadline, 'PPP', { locale: sv }));
+    formData.append('decisionFile', values.decisionFile[0]);
+    formData.append('_subject', `Nytt ärende: ${values.name}`);
+
+
     try {
-      // 1. Upload file
-      const file = values.decisionFile[0];
-      const storageRef = ref(storage, `klientfiler/${user.uid}/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      
-      // 2. Get link
-      const downloadURL = await getDownloadURL(storageRef);
-
-      // Keep the form submission data for admin purposes
-      const submissionData = {
-        name: values.name,
-        phone: values.phone,
-        email: values.email,
-        appealDeadline: values.appealDeadline,
-        fileUrl: downloadURL,
-        submissionDate: new Date(),
-        submitterUid: user.uid,
-      };
-
-      // 3. Create mail document data
-      const mailData = {
-        to: 'formular@utvisning.se',
-        message: {
-          subject: 'Nytt ärende: ' + values.name,
-          html: '<h3>Ny förfrågan från utvisad.se</h3>' +
-                '<p><b>Namn:</b> ' + values.name + '</p>' +
-                '<p><b>Telefon:</b> ' + values.phone + '</p>' +
-                '<p><b>Sista datum för överklagan:</b> ' + format(values.appealDeadline, 'PPP', { locale: sv }) + '</p>' +
-                '<p><b>Bifogad fil:</b> <a href="' + downloadURL + '">Klicka här för att öppna beslutet</a></p>'
+      const response = await fetch(`https://formspree.io/f/${FORMSPREE_FORM_ID}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
         }
-      };
-      
-      // Await both operations to ensure they complete before showing success message
-      await addDoc(collection(firestore, 'contact_form_submissions'), submissionData);
-      await addDoc(collection(firestore, 'mail'), mailData);
-      
-      // 4. Show confirmation
-      toast({
-        title: 'Tack för dina uppgifter!',
-        description: 'Vi har tagit emot ditt ärende och återkommer snart.',
       });
-      form.reset();
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+
+      if (response.ok) {
+        toast({
+          title: 'Tack för dina uppgifter!',
+          description: 'Vi har tagit emot ditt ärende och återkommer snart.',
+        });
+        form.reset();
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      } else {
+        throw new Error('Form submission failed');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Submission error:', error);
-      let errorMessage = 'Kunde inte skicka in ditt ärende. Kontrollera din anslutning och försök igen.';
-      if (error.code === 'storage/unauthorized') {
-        errorMessage = 'Behörighet saknas för filuppladdning. Kontrollera Firebase Storage-reglerna i konsolen.';
-      }
       toast({
         variant: 'destructive',
         title: 'Fel vid inskickning',
-        description: errorMessage,
+        description: 'Kunde inte skicka in ditt ärende. Försök igen.',
       });
     } finally {
       setIsSubmitting(false);
@@ -145,121 +117,126 @@ export function AnalysisForm() {
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Namn</FormLabel>
-              <FormControl>
-                <Input placeholder="Ditt fullständiga namn" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Telefon</FormLabel>
-              <FormControl>
-                <Input placeholder="Ditt telefonnummer" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>E-post</FormLabel>
-              <FormControl>
-                <Input placeholder="din.epost@adress.se" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="appealDeadline"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>Sista datum för överklagan</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={'outline'}
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !field.value && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {field.value ? (
-                        format(field.value, 'PPP', { locale: sv })
-                      ) : (
-                        <span>Välj ett datum</span>
-                      )}
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
+    <>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Namn</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ditt fullständiga namn" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Telefon</FormLabel>
+                <FormControl>
+                  <Input placeholder="Ditt telefonnummer" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-post</FormLabel>
+                <FormControl>
+                  <Input placeholder="din.epost@adress.se" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="appealDeadline"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>Sista datum för överklagan</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !field.value && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value ? (
+                          format(field.value, 'PPP', { locale: sv })
+                        ) : (
+                          <span>Välj ett datum</span>
+                        )}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={field.value}
+                      onSelect={field.onChange}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="decisionFile"
+            render={({ field: { onChange, value, ...rest } }) => (
+              <FormItem>
+                <FormLabel>Ladda upp ditt beslut här</FormLabel>
+                <FormControl>
+                  <Input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files) {
+                        onChange(e.target.files);
+                      }
+                    }}
+                    {...rest}
                   />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="decisionFile"
-          render={({ field: { onChange, value, ...rest } }) => (
-            <FormItem>
-              <FormLabel>Ladda upp ditt beslut här</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      onChange(e.target.files);
-                    }
-                  }}
-                  {...rest}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button
-          type="submit"
-          className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-          size="lg"
-          disabled={isSubmitting || isUserLoading}
-        >
-          {(isSubmitting || isUserLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Skicka in för analys
-        </Button>
-        <p className="pt-2 text-center text-xs text-muted-foreground">
-          Dina dokument granskas under sekretess. Vi kontaktar dig så snart vi
-          har läst igenom ditt ärende.
-        </p>
-      </form>
-    </Form>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
+            size="lg"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Skicka in för analys
+          </Button>
+          <p className="pt-2 text-center text-xs text-muted-foreground">
+            Dina dokument granskas under sekretess. Vi kontaktar dig så snart vi
+            har läst igenom ditt ärende.
+          </p>
+        </form>
+      </Form>
+      <p className="text-center text-xs text-muted-foreground mt-4">
+        2. Byt ut <code className="font-mono bg-muted p-1 rounded-sm">'YOUR_FORM_ID'</code> i <code className="font-mono bg-muted p-1 rounded-sm">src/components/analysis-form.tsx</code> med ditt riktiga Formspree ID.
+      </p>
+    </>
   );
 }

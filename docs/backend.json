@@ -68,55 +68,6 @@
         "name"
       ]
     },
-    "ContactFormSubmission": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ContactFormSubmission",
-      "type": "object",
-      "description": "Represents a submission from the contact form.",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "Name of the person submitting the form."
-        },
-        "phone": {
-          "type": "string",
-          "description": "Phone number of the person submitting the form."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the person submitting the form.",
-          "format": "email"
-        },
-        "appealDeadline": {
-          "type": "string",
-          "description": "The deadline for the appeal.",
-          "format": "date-time"
-        },
-        "fileUrl": {
-          "type": "string",
-          "description": "URL of the uploaded decision file in Firebase Storage.",
-          "format": "uri"
-        },
-        "submissionDate": {
-          "type": "string",
-          "description": "Date and time when the form was submitted.",
-          "format": "date-time"
-        },
-        "submitterUid": {
-          "type": "string",
-          "description": "The UID of the (anonymous) user who submitted the form."
-        }
-      },
-      "required": [
-        "name",
-        "phone",
-        "email",
-        "appealDeadline",
-        "fileUrl",
-        "submissionDate",
-        "submitterUid"
-      ]
-    },
     "Image": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Image",
@@ -195,22 +146,6 @@
         }
       },
       {
-        "path": "/contact_form_submissions/{contactFormSubmissionId}",
-        "definition": {
-          "entityName": "ContactFormSubmission",
-          "schema": {
-            "$ref": "#/backend/entities/ContactFormSubmission"
-          },
-          "description": "Stores contact form submissions. Access restricted to administrators.",
-          "params": [
-            {
-              "name": "contactFormSubmissionId",
-              "description": "Unique identifier for the contact form submission."
-            }
-          ]
-        }
-      },
-      {
         "path": "/images/{imageId}",
         "definition": {
           "entityName": "Image",
@@ -227,6 +162,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to support WebWave's core features while prioritizing security, scalability, and ease of debugging.  Authorization Independence is achieved through structural segregation and path-based ownership, avoiding the need for `get()` calls in security rules. This enhances atomic operations and simplifies debugging.\n\n1.  **Blog Posts:** Blog posts are stored in the `/blog_posts` collection. This allows for easy listing of all blog posts.  We segregate data by using a top-level collection that makes public content available.\n2.  **Tags:** Tags are stored in the `/tags` collection. This allows for easy management and association of tags with blog posts.\n3.  **Contact Form Submissions:** Contact form submissions are stored in the `/contact_form_submissions` collection. Access to this collection should be restricted to administrators only. This ensures that sensitive contact information is not publicly accessible.\n4.  **Images:** Images are stored in the `/images` collection. This allows for easy listing of all images. We segregate data by using a top-level collection that makes public content available.\n\nThis structure supports the required QAPs by using segregation and path-based ownership.  The blog posts and images are segregated into their own collections, allowing for secure list operations.  The contact form submissions are also segregated into their own collection, with restricted access."
+    "reasoning": "The Firestore structure is designed to support WebWave's core features while prioritizing security, scalability, and ease of debugging.  Authorization Independence is achieved through structural segregation and path-based ownership, avoiding the need for `get()` calls in security rules. This enhances atomic operations and simplifies debugging.\n\n1.  **Blog Posts:** Blog posts are stored in the `/blog_posts` collection. This allows for easy listing of all blog posts.  We segregate data by using a top-level collection that makes public content available.\n2.  **Tags:** Tags are stored in the `/tags` collection. This allows for easy management and association of tags with blog posts.\n3.  **Images:** Images are stored in the `/images` collection. This allows for easy listing of all images. We segregate data by using a top-level collection that makes public content available.\n\nThis structure supports the required QAPs by using segregation and path-based ownership.  The blog posts and images are segregated into their own collections, allowing for secure list operations."
   }
 }

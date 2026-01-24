@@ -8,7 +8,7 @@ export function AnalysisForm() {
       data-tally-src="https://tally.so/embed/dW9Zgd?alignLeft=1&hideTitle=1&transparentBackground=1"
       loading="lazy"
       width="80%"
-      height="50"
+      height="400"
       frameBorder="0"
       marginHeight="0"
       marginWidth="0"

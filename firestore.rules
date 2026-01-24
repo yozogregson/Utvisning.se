@@ -101,9 +101,9 @@ service cloud.firestore {
     }
 
     /**
-     * @description A write-only "dropbox" for contact form submissions. Data can be created by anyone but cannot be read.
+     * @description A "dropbox" for contact form submissions. Data can be created by any authenticated user (incl. anonymous).
      * @path /contact_form_submissions/{contactFormSubmissionId}
-     * @allow (create) An anonymous visitor successfully submits the contact form.
+     * @allow (create) An anonymous visitor successfully submits the contact form, ensuring the UID matches.
      * @deny (get) Any user attempts to read a submission, even their own.
      * @deny (list) Any user attempts to list all submissions.
      * @principle Protects sensitive user data by making it write-only from the client-side. Access should be granted via Cloud Functions or a secure admin panel.

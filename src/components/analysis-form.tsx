@@ -102,10 +102,10 @@ export function AnalysisForm() {
         submitterUid: user.uid,
       };
 
-      // 3. Create mail document data as requested
+      // 3. Create mail document data
       const mailData = {
         to: 'formular@utvisning.se',
-        message: { // This is a Map (object) as requested
+        message: {
           subject: 'Nytt ärende: ' + values.name,
           html: '<h3>Ny förfrågan från utvisad.se</h3>' +
                 '<p><b>Namn:</b> ' + values.name + '</p>' +
@@ -130,10 +130,14 @@ export function AnalysisForm() {
       }
     } catch (error: any) {
       console.error('Submission error:', error);
+      let errorMessage = 'Kunde inte skicka in ditt ärende. Kontrollera din anslutning och försök igen.';
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = 'Behörighet saknas för filuppladdning. Kontrollera Firebase Storage-reglerna i konsolen.';
+      }
       toast({
         variant: 'destructive',
         title: 'Fel vid inskickning',
-        description: error.message || 'Kunde inte skicka in ditt ärende. Kontrollera din anslutning och försök igen.',
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);

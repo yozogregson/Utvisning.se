@@ -204,7 +204,7 @@ const CTASection = () => (
 
 export default function Home() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" data-trigger-rebuild="true">
       <HeroSection />
       <ProblemAndGuideSection />
       <PlanSection />

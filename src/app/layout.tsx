@@ -44,6 +44,7 @@ export default function RootLayout({
           <Toaster />
         </FirebaseClientProvider>
         <Script src="https://tally.so/widgets/embed.js" strategy="lazyOnload" />
+        <Script src="https://player.vimeo.com/api/player.js" strategy="lazyOnload" />
       </body>
     </html>
   );

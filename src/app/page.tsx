@@ -14,8 +14,17 @@ const HeroSection = () => (
       </p>
       <div className="mt-8">
         <p className="font-semibold mb-4">Se vår video för att förstå hur vi kan hjälpa dig:</p>
-        <div className="aspect-video bg-card max-w-2xl mx-auto rounded-lg flex items-center justify-center border">
-          <p className="text-muted-foreground">(Video 1: Introduktion)</p>
+        <div className="max-w-2xl mx-auto rounded-lg overflow-hidden border shadow-xl bg-card">
+          <div style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
+            <iframe
+              src="https://player.vimeo.com/video/1164114312?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+              frameBorder="0"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              title="VSL 1 UTVISNING.SE"
+            ></iframe>
+          </div>
         </div>
       </div>
       <Button asChild className="mt-10 bg-accent text-accent-foreground hover:bg-accent/90" size="lg">
@@ -209,7 +218,7 @@ export default function Home() {
       <ProblemAndGuideSection />
       <PlanSection />
       <AnalysisSection />
-      <StakesSection />
+      < StakesSection />
       <CTASection />
     </div>
   );

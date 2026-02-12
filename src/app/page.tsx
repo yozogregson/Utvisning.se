@@ -142,8 +142,17 @@ const AnalysisSection = () => (
             </div>
             <div className="grid md:grid-cols-2 gap-12 items-start max-w-6xl mx-auto">
                 <div className="space-y-4">
-                    <div className="aspect-video bg-card rounded-lg flex items-center justify-center border">
-                        <p className="text-muted-foreground">(Video 2: Detaljerad process)</p>
+                    <div className="aspect-video bg-card rounded-lg overflow-hidden border shadow-lg">
+                      <div style={{ padding: '56.25% 0 0 0', position: 'relative' }}>
+                        <iframe
+                          src="https://player.vimeo.com/video/1164114057?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                          frameBorder="0"
+                          allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                          title="VSL 2 UTVISNING.SE"
+                        ></iframe>
+                      </div>
                     </div>
                      <p className="text-sm text-muted-foreground">Titta på videon för att se hur vår process hjälper dig att bygga ett starkt ärende, steg för steg.</p>
                 </div>

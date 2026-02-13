@@ -15,50 +15,51 @@ export default function GDPRPage() {
       <article className="space-y-10">
         <header>
           <h1 className="font-headline text-3xl md:text-4xl font-bold tracking-tight text-primary mb-4">
-            Integritetspolicy för utvisning.se
+            Integritetspolicy för Utvisning.se
           </h1>
-          <p className="text-muted-foreground">Senast uppdaterad: 2025-01-27</p>
+          <p className="text-muted-foreground">Senast uppdaterad: 13 februari 2026</p>
         </header>
         
         <section className="space-y-4">
-          <h2 className="font-headline text-xl font-bold text-foreground">Vilka vi är</h2>
+          <h2 className="font-headline text-xl font-bold text-foreground">1. Allmänt</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Vi driver utvisning.se för att hjälpa individer att få rättssäker hjälp med att överklaga utvisningsbeslut.
+            Vi värnar om din personliga integritet. Denna policy förklarar hur vi samlar in och använder data för att ge dig bästa möjliga hjälp i frågor gällande utvisningsbeslut.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-headline text-xl font-bold text-foreground">Data vi samlar in</h2>
+          <h2 className="font-headline text-xl font-bold text-foreground">2. Vilken data samlar vi in?</h2>
+          <div className="space-y-4 text-muted-foreground leading-relaxed">
+            <p>
+              <strong className="text-foreground">Besöksstatistik:</strong> Vi använder Google Analytics 4 (GA4) för att förstå hur besökare använder vår sida, hur länge man ser på vår video och vilka knappar som används. Detta hjälper oss att förbättra vår rådgivning.
+            </p>
+            <p>
+              <strong className="text-foreground">Samtycke:</strong> Vi använder Cookiebot för att hantera ditt samtycke. Cookiebot sparar din status (om du godkänt cookies eller inte) i 12 månader.
+            </p>
+            <p>
+              <strong className="text-foreground">Video:</strong> Vi använder Vimeo för att visa vår informationsvideo. När du ser videon kan Vimeo samla in viss teknisk data om din enhet.
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="font-headline text-xl font-bold text-foreground">3. Laglig grund</h2>
           <p className="text-muted-foreground leading-relaxed">
-            När du använder vårt kontaktformulär samlar vi in namn, e-postadress, telefonnummer och den information du väljer att dela om ditt ärende.
+            Vi behandlar din data baserat på ditt samtycke (via vår cookie-banner) samt vårt berättigade intresse att marknadsföra våra tjänster via Google Ads.
           </p>
         </section>
 
         <section className="space-y-4">
-          <h2 className="font-headline text-xl font-bold text-foreground">Varför vi sparar data</h2>
+          <h2 className="font-headline text-xl font-bold text-foreground">4. Dina rättigheter</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Vi behöver dina uppgifter för att kunna granska ditt fall, ge dig rådgivning och förmedla kontakt till våra juridiska samarbetspartners.
-          </p>
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="font-headline text-xl font-bold text-foreground">Lagringstid</h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Vi sparar dina uppgifter så länge ärendet är aktivt, eller tills du ber oss radera dem.
-          </p>
-        </section>
-
-        <section className="space-y-4">
-          <h2 className="font-headline text-xl font-bold text-foreground">Dina rättigheter</h2>
-          <p className="text-muted-foreground leading-relaxed">
-            Du har när som helst rätt att begära utdrag på vilken information vi har om dig, få uppgifter rättade eller begära att vi raderar allt.
+            Du har rätt att när som helst dra tillbaka ditt samtycke, begära utdrag av din data eller be oss radera information. Du kan enkelt ändra dina inställningar via den lilla ikonen från Cookiebot nere i hörnet.
           </p>
         </section>
 
         <section className="space-y-4 pt-6 border-t">
-          <h2 className="font-headline text-xl font-bold text-foreground">Kontakt</h2>
+          <h2 className="font-headline text-xl font-bold text-foreground">5. Kontakt</h2>
           <p className="text-muted-foreground leading-relaxed">
-            För frågor om din data, kontakta oss på: <span className="font-medium text-primary">[Här skriver du din e-post]</span>
+            För frågor om din data, kontakta oss på: <a href="mailto:info@utvisning.se" className="font-medium text-primary hover:underline">info@utvisning.se</a>
           </p>
         </section>
       </article>
